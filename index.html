@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Animations & localStorage Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .animated-box {
+            width: 200px;
+            height: 200px;
+            background-color: #3498db;
+            margin: 30px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            border-radius: 10px;
+            
+            /* Transition for smooth color changes */
+            transition: background-color 0.5s ease;
+        }
+        
+        /* Bounce animation */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-30px); }
+        }
+        
+        .bounce-animation {
+            animation: bounce 1s infinite;
+        }
+        
+        /* Spin animation */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .spin-animation {
+            animation: spin 2s linear infinite;
+        }
+        
+        /* Pulse animation */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #27ae60;
+            transform: scale(1.05);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .preferences {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSS Animations & localStorage Demo</h1>
+    
+    <div class="controls">
+        <button id="bounce-btn">Bounce Animation</button>
+        <button id="spin-btn">Spin Animation</button>
+        <button id="pulse-btn">Pulse Animation</button>
+        <button id="stop-btn">Stop Animation</button>
+        <button id="color-btn">Change Color</button>
+    </div>
+    
+    <div class="animated-box" id="animation-box">
+        Animated Box
+    </div>
+    
+    <div class="preferences">
+        <h3>Your Preferences</h3>
+        <p>Last animation: <span id="last-animation">None</span></p>
+        <p>Box color: <span id="box-color">#3498db</span></p>
+        <button id="reset-btn">Reset Preferences</button>
+    </div>
+    
+    <script>
+        // DOM elements
+        const animationBox = document.getElementById('animation-box');
+        const lastAnimationSpan = document.getElementById('last-animation');
+        const boxColorSpan = document.getElementById('box-color');
+        
+        // Buttons
+        const bounceBtn = document.getElementById('bounce-btn');
+        const spinBtn = document.getElementById('spin-btn');
+        const pulseBtn = document.getElementById('pulse-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const colorBtn = document.getElementById('color-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        
+        // Colors for color change button
+        const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'];
+        let currentColorIndex = 0;
+        
+        // Load preferences from localStorage
+        function loadPreferences() {
+            const lastAnimation = localStorage.getItem('lastAnimation');
+            const boxColor = localStorage.getItem('boxColor');
+            
+            if (lastAnimation) {
+                lastAnimationSpan.textContent = lastAnimation;
+            }
+            
+            if (boxColor) {
+                animationBox.style.backgroundColor = boxColor;
+                boxColorSpan.textContent = boxColor;
+                
+                // Find the current color index
+                currentColorIndex = colors.indexOf(boxColor);
+                if (currentColorIndex === -1) {
+                    // If color not in our array, add it
+                    colors.push(boxColor);
+                    currentColorIndex = colors.length - 1;
+                }
+            }
+        }
+        
+        // Save preferences to localStorage
+        function savePreference(key, value) {
+            localStorage.setItem(key, value);
+            
+            // Update the display
+            if (key === 'lastAnimation') {
+                lastAnimationSpan.textContent = value;
+            } else if (key === 'boxColor') {
+                boxColorSpan.textContent = value;
+            }
+        }
+        
+        // Apply animation to the box
+        function applyAnimation(animationClass) {
+            // First remove all animation classes
+            animationBox.classList.remove('bounce-animation', 'spin-animation', 'pulse-animation');
+            
+            if (animationClass) {
+                animationBox.classList.add(animationClass);
+                savePreference('lastAnimation', animationClass.replace('-animation', ''));
+            } else {
+                savePreference('lastAnimation', 'None');
+            }
+        }
+        
+        // Change box color
+        function changeBoxColor() {
+            currentColorIndex = (currentColorIndex + 1) % colors.length;
+            const newColor = colors[currentColorIndex];
+            animationBox.style.backgroundColor = newColor;
+            savePreference('boxColor', newColor);
+        }
+        
+        // Reset all preferences
+        function resetPreferences() {
+            localStorage.clear();
+            animationBox.style.backgroundColor = '#3498db';
+            animationBox.classList.remove('bounce-animation', 'spin-animation', 'pulse-animation');
+            lastAnimationSpan.textContent = 'None';
+            boxColorSpan.textContent = '#3498db';
+            currentColorIndex = 0;
+        }
+        
+        // Event listeners
+        bounceBtn.addEventListener('click', () => applyAnimation('bounce-animation'));
+        spinBtn.addEventListener('click', () => applyAnimation('spin-animation'));
+        pulseBtn.addEventListener('click', () => applyAnimation('pulse-animation'));
+        stopBtn.addEventListener('click', () => applyAnimation(null));
+        colorBtn.addEventListener('click', changeBoxColor);
+        resetBtn.addEventListener('click', resetPreferences);
+        
+        // Initialize by loading preferences
+        loadPreferences();
+    </script>
+</body>
+</html>
